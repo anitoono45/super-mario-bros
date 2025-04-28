@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anitoono - Watch Movie</title>
+    <title>Anitoono - Watch Anime</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -60,7 +60,7 @@
 
         /* Controls Bar Styling */
         .controls-bar {
-            background-color: #1E293B; /* Dark gray background */
+            background-color: #1e293b; /* Dark gray background */
             padding: 0.75rem;
             display: flex;
             justify-content: flex-end; /* Align controls to the right */
@@ -69,21 +69,7 @@
             border-bottom-right-radius: 0.5rem;
             flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
             gap: 0.5rem; /* Add space between wrapped buttons */
-             /* Default positioning relative to iframe-container */
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 20; /* Ensure controls are above the iframe */
-            transition: background-color 0.3s ease; /* Add transition for background */
         }
-
-        /* Remove CSS fullscreen pseudo-class styles as we'll manage with JS */
-        /* .iframe-container:fullscreen .controls-bar { ... } */
-        /* :-webkit-full-screen .controls-bar { ... } */
-        /* :-moz-full-screen .controls-bar { ... } */
-        /* :-ms-fullscreen .controls-bar { ... } */
-
 
         .control-button {
             background-color: #374151; /* Slightly lighter gray for buttons */
@@ -183,9 +169,10 @@
             <div id="iframe-container" class="iframe-container">
                 <iframe id="anime-iframe" src="" allowfullscreen></iframe>
                  <div id="loading-indicator">
-                    <div class="loader"></div> </div>
+                    <div class="loader"></div>
+                 </div>
             </div>
-            <div id="controls-bar" class="controls-bar">
+            <div class="controls-bar">
                  <button id="light-button" class="control-button">
                     <i class="fas fa-lightbulb"></i> Light
                 </button>
@@ -197,9 +184,9 @@
 
 
         <div class="bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 id="anime-title" class="text-2xl font-semibold mb-4 text-red-500">Movie Title</h2>
+            <h2 id="anime-title" class="text-2xl font-semibold mb-4 text-red-500">Fixed Video Source</h2>
             <p id="anime-description" class="text-gray-300 mb-4">
-                This is a placeholder description for the movie. The video source is now fixed to the provided iframe URL.
+                This page displays a single video from a fixed external source. Episode selection is not available on this page.
             </p>
         </div>
 
@@ -218,7 +205,9 @@
         const lightButton = document.getElementById('light-button');
         const lightOverlay = document.getElementById('light-overlay');
         const loadingIndicator = document.getElementById('loading-indicator'); // Loading indicator element
-        const controlsBar = document.getElementById('controls-bar'); // Get the controls bar element
+
+        // Fixed video source URL
+        const fixedVideoUrl = "https://anitocloud.blogspot.com/?player=plyr&provider=gdrive&format=video%2Fmp4&link=13uxkcnBMtg2pkh16rRijlvExhLipA_rI";
 
 
         // Helper function to open a modal (not used in this version, but kept for consistency)
@@ -298,63 +287,24 @@
             console.log("Iframe loaded."); // Debugging line
         };
 
-        // Event listener for fullscreen change to manage controls bar visibility and position
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // For Webkit browsers
-        document.addEventListener('mozfullscreenchange', handleFullscreenChange); // For Firefox
-        document.addEventListener('MSFullscreenChange', handleFullscreenChange); // For IE/Edge
-
-        function handleFullscreenChange() {
-            // Check if the iframe container is the element currently in fullscreen
-            const isFullscreen = document.fullscreenElement === iframeContainer ||
-                                 document.webkitFullscreenElement === iframeContainer ||
-                                 document.mozFullScreenElement === iframeContainer ||
-                                 document.msFullscreenElement === iframeContainer;
-
-            if (isFullscreen) {
-                console.log("Entering fullscreen, showing controls.");
-                // Explicitly set styles to ensure controls are visible in fullscreen
-                controlsBar.style.position = 'absolute';
-                controlsBar.style.bottom = '0';
-                controlsBar.style.left = '0';
-                controlsBar.style.width = '100%';
-                controlsBar.style.display = 'flex'; // Ensure display is flex
-                controlsBar.style.zIndex = '2147483647'; // Very high z-index
-                controlsBar.style.backgroundColor = 'rgba(30, 41, 59, 0.8)'; // Semi-transparent background
-            } else {
-                console.log("Exiting fullscreen, reverting controls styles.");
-                // Revert styles when exiting fullscreen
-                // These should match the default styles in your CSS
-                controlsBar.style.position = 'absolute'; // Revert to default absolute positioning
-                controlsBar.style.bottom = '0';
-                controlsBar.style.left = '0';
-                controlsBar.style.width = '100%';
-                controlsBar.style.display = 'flex'; // Revert to default flex display
-                controlsBar.style.zIndex = '20'; // Revert to default z-index
-                controlsBar.style.backgroundColor = '#1e293b'; // Revert to default background color
-            }
-        }
-
 
         // Set iframe src and update placeholders on page load
         window.onload = function() {
-            // Show loading indicator before setting iframe src
+             // Show loading indicator before setting iframe src
             loadingIndicator.classList.remove('hidden');
 
-            // Set the src of the iframe to the fixed URL for the movie
-            // In a real application, you would pass the movie URL via a query parameter
-            animeIframe.src = "https://anitocloud.blogspot.com/?player=plyr&provider=gdrive&format=video%2Fmp4&link=13uxkcnBMtg2pkh16rRijlvExhLipA_rI"; // Replace with actual movie URL if different
+            // Set the src of the iframe to the fixed video URL
+            animeIframe.src = fixedVideoUrl;
 
-            // The title and description are now just placeholders since the video source is fixed.
-            // In a real application, you would need a way to get the correct title/description
-            // if they are not provided by the iframe itself or a separate API.
+            // Update the title and description for the fixed source
             animeTitle.textContent = 'The Super Mario Bros';
             animeDescription.textContent = 'While working underground to fix a water main, Brooklyn plumbers—and brothers—Mario and Luigi are transported down a mysterious pipe and wander into a magical new world. But when the brothers are separated, Mario embarks on an epic quest to find Luigi.';
 
-            // Ensure the iframe and controls are visible initially
+            // Ensure the iframe and controls are visible
             iframeContainer.style.display = 'block';
-            controlsBar.style.display = 'flex'; // Ensure controls bar is visible initially
+            document.querySelector('.controls-bar').style.display = 'flex';
         };
     </script>
 </body>
-  </html>
+</html>
+
