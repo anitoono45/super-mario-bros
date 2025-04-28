@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anitoono - Watch Movie</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for Anitoono Theme (Red and Black) */
+        body {
+            background-color: #111827; /* Dark background */
+            color: #f9fafb; /* Light text */
+            font-family: 'Inter', sans-serif;
+        }
+        .text-red-500 {
+            color: #ef4444; /* Red color from Tailwind */
+        }
+        .bg-red-500 {
+            background-color: #ef4444; /* Red background from Tailwind */
+        }
+        .hover\:bg-red-600:hover {
+            background-color: #dc2626; /* Darker red hover effect */
+        }
+        .bg-gray-800 {
+            background-color: #1e293b; /* Dark gray background */
+        }
+        .border-red-500 {
+            border-color: #ef4444; /* Red border */
+        }
+        .focus\:ring-red-500:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5); /* Red focus ring */
+        }
+
+        /* Responsive iframe Container */
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            /* Maintain aspect ratio (e.g., 16:9) */
+            padding-top: 56.25%; /* 16:9 Aspect Ratio (height / width * 100) */
+            background-color: #000; /* Black background for iframe area */
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none; /* Remove default iframe border */
+        }
+
+        /* Mobile-friendly adjustments */
+        .container {
+            max-width: 100%; /* Ensure container takes full width on small screens */
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        /* Controls Bar Styling */
+        .controls-bar {
+            background-color: #1E293B; /* Dark gray background */
+            padding: 0.75rem;
+            display: flex;
+            justify-content: flex-end; /* Align controls to the right */
+            align-items: center;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            gap: 0.5rem; /* Add space between wrapped buttons */
+             /* Default positioning relative to iframe-container */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 20; /* Ensure controls are above the iframe */
+            transition: background-color 0.3s ease; /* Add transition for background */
+        }
+
+        /* Remove CSS fullscreen pseudo-class styles as we'll manage with JS */
+        /* .iframe-container:fullscreen .controls-bar { ... } */
+        /* :-webkit-full-screen .controls-bar { ... } */
+        /* :-moz-full-screen .controls-bar { ... } */
+        /* :-ms-fullscreen .controls-bar { ... } */
+
+
+        .control-button {
+            background-color: #374151; /* Slightly lighter gray for buttons */
+            color: #d1d5db; /* Light gray text/icon color */
+            padding: 0.5rem 0.75rem; /* Adjusted padding for smaller screens */
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem; /* Slightly smaller font size on buttons */
+        }
+
+        .control-button:hover {
+            background-color: #4b5563; /* Even lighter gray on hover */
+            color: #f9fafb; /* White text/icon on hover */
+        }
+
+        .control-button i {
+            margin-right: 0.25rem; /* Reduced space between icon and text */
+        }
+
+        /* Remove margin from the last button as gap handles spacing */
+        .controls-bar .control-button:last-child {
+             margin-right: 0;
+        }
+
+        /* Light Mode Overlay */
+        .light-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Dark overlay with transparency */
+            z-index: 40; /* Below modals, above main content */
+            pointer-events: none; /* Allow clicks to pass through the overlay */
+            transition: background-color 0.3s ease;
+        }
+
+        .light-overlay.active {
+            pointer-events: auto; /* Allow clicks on the overlay when active (e.g., to dismiss) */
+             /* You might want to add an event listener to the overlay to turn off light mode when clicked */
+        }
+
+        /* Loading Indicator Styling */
+        #loading-indicator {
+            position: absolute; /* Position relative to its container */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%; /* Cover the video area */
+            background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #f9fafb; /* Light text color */
+            font-size: 1.25rem;
+            z-index: 10; /* Above the iframe but below controls/overlay */
+            transition: opacity 0.3s ease;
+        }
+
+        #loading-indicator.hidden {
+            opacity: 0;
+            pointer-events: none; /* Allow clicks to pass through when hidden */
+        }
+
+        /* Circular Loader Styling */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3); /* Light border */
+            border-top: 4px solid #ef4444; /* Red border for the spinning part */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite; /* Spin animation */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <header class="bg-gray-800 py-4 flex justify-between items-center shadow-md sticky top-0 z-10 rounded-md">
+        <div class="logo text-red-500 text-2xl font-semibold ml-4">Anitoono</div>
+        <div class="nav-links mr-4">
+             <a href="https://anitoono45.github.io/home/" class="text-gray-300 hover:text-white transition duration-300">Back to Home</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto mt-8 p-4">
+        <div class="video-player-section rounded-lg overflow-hidden mb-6">
+            <div id="iframe-container" class="iframe-container">
+                <iframe id="anime-iframe" src="" allowfullscreen></iframe>
+                 <div id="loading-indicator">
+                    <div class="loader"></div> </div>
+            </div>
+            <div id="controls-bar" class="controls-bar">
+                 <button id="light-button" class="control-button">
+                    <i class="fas fa-lightbulb"></i> Light
+                </button>
+                <button id="fullscreen-button" class="control-button">
+                    <i class="fas fa-expand"></i> Fullscreen
+                </button>
+            </div>
+        </div>
+
+
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 id="anime-title" class="text-2xl font-semibold mb-4 text-red-500">Movie Title</h2>
+            <p id="anime-description" class="text-gray-300 mb-4">
+                This is a placeholder description for the movie. The video source is now fixed to the provided iframe URL.
+            </p>
+        </div>
+
+        </main>
+
+    <div id="light-overlay" class="light-overlay hidden"></div>
+
+
+    <script>
+        // Get references to elements
+        const iframeContainer = document.getElementById('iframe-container');
+        const animeIframe = document.getElementById('anime-iframe');
+        const animeTitle = document.getElementById('anime-title');
+        const animeDescription = document.getElementById('anime-description');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        const lightButton = document.getElementById('light-button');
+        const lightOverlay = document.getElementById('light-overlay');
+        const loadingIndicator = document.getElementById('loading-indicator'); // Loading indicator element
+        const controlsBar = document.getElementById('controls-bar'); // Get the controls bar element
+
+
+        // Helper function to open a modal (not used in this version, but kept for consistency)
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove("hidden");
+            document.body.style.overflow = "hidden"; // Prevent scrolling background
+        }
+
+        // Helper function to close a modal (not used in this version, but kept for consistency)
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add("hidden");
+            document.body.style.overflow = "auto"; // Restore scrolling background
+            // Clear form fields and errors when closing modals (if applicable)
+            // ... (add modal-specific clearing if needed in the future)
+        }
+
+
+        // Function to toggle fullscreen mode for the iframe container
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                // If currently in fullscreen, exit fullscreen
+                document.exitFullscreen();
+                // Attempt to unlock screen orientation when exiting fullscreen
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                    console.log('Screen orientation unlocked.');
+                } else {
+                    console.log('Screen Orientation API or unlock() not supported.');
+                }
+            } else {
+                // If not in fullscreen, request fullscreen for the iframe container
+                if (iframeContainer.requestFullscreen) {
+                    iframeContainer.requestFullscreen();
+                } else if (iframeContainer.mozRequestFullScreen) { /* Firefox */
+                    iframeContainer.mozRequestFullScreen();
+                } else if (iframeContainer.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                    iframeContainer.webkitRequestFullscreen();
+                } else if (iframeContainer.msRequestFullscreen) { /* IE/Edge */
+                    iframeContainer.msRequestFullscreen();
+                }
+
+                // Attempt to lock screen orientation to landscape when entering fullscreen
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape')
+                        .then(() => {
+                            console.log('Screen orientation locked to landscape.');
+                        })
+                        .catch((error) => {
+                            console.log('Failed to lock screen orientation:', error);
+                            // This might fail if not in a secure context or if permission is denied
+                        });
+                } else {
+                    console.log('Screen Orientation API or lock() not supported.');
+                }
+            }
+        }
+
+        // Function to toggle light mode (dark overlay)
+        function toggleLightMode() {
+            lightOverlay.classList.toggle('hidden'); // Toggle the hidden class
+             // The light overlay is a fixed element covering the viewport,
+             // it will darken the area outside the iframe, leaving the iframe content unaffected.
+        }
+
+        // Event listener for fullscreen button
+        fullscreenButton.addEventListener('click', toggleFullscreen);
+
+        // Event listener for light mode button
+        lightButton.addEventListener('click', toggleLightMode);
+
+        // Optional: Add an event listener to the overlay to turn off light mode when clicked
+        lightOverlay.addEventListener('click', toggleLightMode);
+
+        // Event listener for iframe load event to hide loading indicator
+        animeIframe.onload = function() {
+            loadingIndicator.classList.add('hidden');
+            console.log("Iframe loaded."); // Debugging line
+        };
+
+        // Event listener for fullscreen change to manage controls bar visibility and position
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // For Webkit browsers
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange); // For Firefox
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange); // For IE/Edge
+
+        function handleFullscreenChange() {
+            // Check if the iframe container is the element currently in fullscreen
+            const isFullscreen = document.fullscreenElement === iframeContainer ||
+                                 document.webkitFullscreenElement === iframeContainer ||
+                                 document.mozFullScreenElement === iframeContainer ||
+                                 document.msFullscreenElement === iframeContainer;
+
+            if (isFullscreen) {
+                console.log("Entering fullscreen, showing controls.");
+                // Explicitly set styles to ensure controls are visible in fullscreen
+                controlsBar.style.position = 'absolute';
+                controlsBar.style.bottom = '0';
+                controlsBar.style.left = '0';
+                controlsBar.style.width = '100%';
+                controlsBar.style.display = 'flex'; // Ensure display is flex
+                controlsBar.style.zIndex = '2147483647'; // Very high z-index
+                controlsBar.style.backgroundColor = 'rgba(30, 41, 59, 0.8)'; // Semi-transparent background
+            } else {
+                console.log("Exiting fullscreen, reverting controls styles.");
+                // Revert styles when exiting fullscreen
+                // These should match the default styles in your CSS
+                controlsBar.style.position = 'absolute'; // Revert to default absolute positioning
+                controlsBar.style.bottom = '0';
+                controlsBar.style.left = '0';
+                controlsBar.style.width = '100%';
+                controlsBar.style.display = 'flex'; // Revert to default flex display
+                controlsBar.style.zIndex = '20'; // Revert to default z-index
+                controlsBar.style.backgroundColor = '#1e293b'; // Revert to default background color
+            }
+        }
+
+
+        // Set iframe src and update placeholders on page load
+        window.onload = function() {
+            // Show loading indicator before setting iframe src
+            loadingIndicator.classList.remove('hidden');
+
+            // Set the src of the iframe to the fixed URL for the movie
+            // In a real application, you would pass the movie URL via a query parameter
+            animeIframe.src = "https://anitocloud.blogspot.com/?player=plyr&provider=gdrive&format=video%2Fmp4&link=13uxkcnBMtg2pkh16rRijlvExhLipA_rI"; // Replace with actual movie URL if different
+
+            // The title and description are now just placeholders since the video source is fixed.
+            // In a real application, you would need a way to get the correct title/description
+            // if they are not provided by the iframe itself or a separate API.
+            animeTitle.textContent = 'The Super Mario Bros';
+            animeDescription.textContent = 'While working underground to fix a water main, Brooklyn plumbers—and brothers—Mario and Luigi are transported down a mysterious pipe and wander into a magical new world. But when the brothers are separated, Mario embarks on an epic quest to find Luigi.';
+
+            // Ensure the iframe and controls are visible initially
+            iframeContainer.style.display = 'block';
+            controlsBar.style.display = 'flex'; // Ensure controls bar is visible initially
+        };
+    </script>
+</body>
+</html>
